@@ -1,0 +1,21 @@
+{
+  "name": "config",
+  "homepage": "https://github.com/willwoz/DayFace",
+  "authors": [
+    "willwoz <waringwill@optusnet.com.au>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "Slate": "pebble-slate#~0.0.3"
+  }
+}
