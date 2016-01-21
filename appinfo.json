@@ -1,0 +1,18 @@
+{
+  "uuid": "d140d7f5-06d0-40fd-954d-419a085fbe36",
+  "shortName": "Serenity",
+  "longName": "Serenity",
+  "companyName": "Leftside Design",
+  "versionLabel": "0.1",
+  "sdkVersion": "3",
+  "targetPlatforms": ["aplite", "basalt", "chalk"],
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}
