@@ -10,7 +10,9 @@
         "showtriangle": 4,
         "temperature": 12,
         "white": 6,
-        "yearfrom": 0
+        "yearfrom": 0,
+        "showweather": 9,
+        "showfahrenheit": 10
     },
     "capabilities": [
         "location",

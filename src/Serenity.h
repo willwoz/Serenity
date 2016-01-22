@@ -16,6 +16,8 @@ struct dayface_config {
     uint8_t white; /*blac kor white*/
     uint8_t battery; /*show battery*/
     uint8_t bluetooth; /*show bluetooth*/
+    uint8_t showweather;
+    uint8_t showfahrenheit;
 } __attribute__((__packed__)) global_config;
 
 #define FMT_DAYS    1
@@ -36,7 +38,7 @@ struct dayface_config {
 #define KEY_BATTERY         7
 #define KEY_BLUETOOTH       8
 #define KEY_WEATHER         9
-#define KEY_UNIT            10
+#define KEY_FAHRENHEIT      10
 #define KEY_TEMPERATURE     12
 #define KEY_CONDITIONS      13
 #define KEY_TOTAL_KEYS      13

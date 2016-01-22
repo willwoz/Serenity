@@ -201,7 +201,21 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
 }
 
 static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
-  layer_mark_dirty(window_get_root_layer(s_window));
+    
+    // Get weather update every 30 minutes
+    if(tick_time->tm_min % 30 == 0) {
+    // Begin dictionary
+        DictionaryIterator *iter;
+        app_message_outbox_begin(&iter);
+
+        // Add a key-value pair
+        dict_write_uint8(iter, 0, 0);
+
+        // Send the message!
+        app_message_outbox_send();
+    }
+    
+    layer_mark_dirty(window_get_root_layer(s_window));
 }
 
 /* App Message Handelers */
@@ -417,7 +431,8 @@ static void init() {
         global_config.battery = 1;
         global_config.bluetooth = 1;
         global_config.white = 0;
-        
+        global_config.showweather = 1;
+        global_config.showfahrenheit = 0;
 //        APP_LOG (APP_LOG_LEVEL_DEBUG,"Set : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
 //        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
 //             global_config.showseconds,
