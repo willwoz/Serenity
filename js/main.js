@@ -25,7 +25,7 @@ function getAndStoreConfigData() {
     var $bluetoothCheckBox = $('#batteryCheckBox');
     var $whiteCheckBox = $('#whiteCheckBox');
     var $showweatherCheckBox = $('#showweatherCheckBox');
-    var $showfahrenheitCheckBox = $('#fahrenheitCheckBox');
+    var $showfahrenheitCheckBox = $('#showfahrenheitCheckBox');
     
   var options = {
     countfrom: $countfromDate.val(),
@@ -62,7 +62,7 @@ function loadOptions() {
     var $bluetoothCheckBox = $('#batteryCheckBox');
     var $whiteCheckBox = $('#whiteCheckBox');
     var $showweatherCheckBox = $('#showweatherCheckBox');
-    var $showfahrenheitCheckBox = $('#fahrenheitCheckBox');
+    var $showfahrenheitCheckBox = $('#showfahrenheitCheckBox');
 
     if (localStorage.countfrom) {
         $countfromDate[0].value = localStorage.countfrom;
@@ -72,7 +72,7 @@ function loadOptions() {
         $batteryCheckBox[0].checked = localStorage.battery === 'true';
         $bluetoothCheckBox[0].checked = (localStorage.bluetooth === 'true');
         $whiteCheckBox[0].checked = (localStorage.white === 'true');
-        $showweatherCheckBox[0].checked =(localStorage.showweather === 'true');
+        $showweatherCheckBox[0].checked = (localStorage.showweather === 'true');
         $showfahrenheitCheckBox[0].checked = (localStorage.showfahrenheit === 'true');
     }
 }
