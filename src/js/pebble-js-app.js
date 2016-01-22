@@ -26,16 +26,19 @@ function locationSuccess(pos) {
             // Conditions
             var conditions = json.weather[0].main;      
             console.log('Conditions are ' + conditions);
-        }      
-    
-    Pebble.sendAppMessage({
-        temperature: temperature,
-        conditions: conditions
-        }, function() {
-            console.log('Send successful!');
-        }, function() {
-            console.log('Send failed!');
-        });
+
+          // Send tp Pebble
+            Pebble.sendAppMessage({
+              temperature: temperature,
+              conditions: conditions },
+              function(e) {
+                console.log('Send successful!');
+              }, function(e) {
+                console.log('Send failed!');
+              }
+            );
+        }
+    );      
 }
 
 function locationError(err) {

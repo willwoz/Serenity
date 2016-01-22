@@ -15,7 +15,7 @@ static GPath *s_triangle,*s_bt_path;
 
 static GColor s_background_color,s_forground_color;
 
-static char s_num_buffer[4], s_day_buffer[6], s_count_buffer[14], s_date_buffer[10],s_battery_buffer[5], s_weather_buffer[10];
+static char s_num_buffer[4], s_day_buffer[6], s_count_buffer[14], s_date_buffer[10],s_battery_buffer[5], s_weather_buffer[20];
 
 static struct tm then;
 
@@ -217,28 +217,30 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
 
+static int current_temp;
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
-    
+    int key_count = 0;
     Tuple *t = dict_read_first(iter);
- 
+
     while (t != NULL) {
         switch (t->key) {
-            case KEY_TEMPERATURE :
-                APP_LOG(APP_LOG_LEVEL_DEBUG,"Temerature: %d",t->value->int8);
+            case KEY_TEMPERATURE :           
+                current_temp = t->value->int8;
+                break;
+            case KEY_CONDITIONS :
+                snprintf (s_weather_buffer,sizeof(s_weather_buffer),"%dC, %s",current_temp,t->value->cstring);
+                APP_LOG(APP_LOG_LEVEL_DEBUG,"Temerature Message: %dC, ",current_temp);
+                update_text_layers();
                 break;
             case KEY_YEAR :
                 global_config.year = t->value->int32;
-                t = dict_read_next(iter);
-                global_config.month = t->value->int8;
-                t = dict_read_next(iter);
+                break;
+            case KEY_DAY :
                 global_config.day = t->value->int8;
-
-                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Date Changed - %d %d %d",(int)global_config.year,global_config.month,global_config.day);
-                
-                then.tm_year = global_config.year - 1900;
-                then.tm_mon = global_config.month -1;
-                then.tm_mday = global_config.day;
-                update_counter (NULL);
+                break;
+            case KEY_MONTH :
+                global_config.month = t->value->int8;
                 break;
             case KEY_SHOWSECONDS :
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Seconds CHanged %d",t->value->int8);
@@ -269,14 +271,19 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
         t = dict_read_next(iter);
     }
   
-//    APP_LOG (APP_LOG_LEVEL_DEBUG,"Configged : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-//    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
-//             global_config.showseconds,
-//             (int)global_config.countformat,
-//             global_config.showtriangle,
-//             global_config.battery,
-//             global_config.bluetooth,
-//             global_config.white);
+    APP_LOG (APP_LOG_LEVEL_DEBUG,"Configged : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
+    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
+             global_config.showseconds,
+             (int)global_config.countformat,
+             global_config.showtriangle,
+             global_config.battery,
+             global_config.bluetooth,
+             global_config.white);
+                
+     then.tm_year = global_config.year - 1900;
+     then.tm_mon = global_config.month -1;
+     then.tm_mday = global_config.day;
+     update_counter (NULL);
 }
 
 
@@ -309,8 +316,7 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_date_layer, date_update_proc);
     layer_add_child(window_layer, s_date_layer);
 
-    s_day_label = text_layer_create(GRect(centre.x-50, 40, 101, 20));
-  
+    s_day_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 3 )/18)-5, 101, 21));
     text_layer_set_text_alignment(s_day_label,GTextAlignmentCenter);
     text_layer_set_text(s_day_label, s_day_buffer);
     text_layer_set_background_color(s_day_label, s_background_color);
@@ -329,7 +335,7 @@ static void window_load(Window *window) {
     
     s_weather_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 13 )/ 18)+1, 101, 21));
     text_layer_set_text_alignment(s_weather_label,GTextAlignmentCenter);
-    text_layer_set_text(s_weather_label, "30, Thunder" /*s_count_buffer*/);
+    text_layer_set_text(s_weather_label, s_weather_buffer);
     text_layer_set_background_color(s_weather_label, s_background_color);
     text_layer_set_text_color(s_weather_label, s_forground_color);
     text_layer_set_font(s_weather_label, fonts_get_system_font(FONT_KEY_GOTHIC_18));
