@@ -35,6 +35,9 @@ struct dayface_config {
 #define KEY_BLACK           6
 #define KEY_BATTERY         7
 #define KEY_BLUETOOTH       8
+#define KEY_WEATHER         9
+#define KEY_UNIT            10
+#define KEY_TEMPERATURE     99
 
 static const struct GPathInfo ANALOG_BG_POINTS[] = {
   { 4, (GPoint []){ /*1*/

@@ -1,17 +1,28 @@
 {
-  "uuid": "d140d7f5-06d0-40fd-954d-419a085fbe36",
-  "shortName": "Serenity",
-  "longName": "Serenity",
-  "companyName": "Leftside Design",
-  "versionLabel": "0.1",
-  "sdkVersion": "3",
-  "targetPlatforms": ["aplite", "basalt", "chalk"],
-  "watchapp": {
-    "watchface": true
+    "uuid": "d140d7f5-06d0-40fd-954d-419a085fbe36",
+    "shortName": "Serenity",
+    "longName": "Serenity",
+    "companyName": "Leftside Design",
+    "versionLabel": "0.1",
+    "sdkVersion": "3",
+    "targetPlatforms": ["aplite", "basalt", "chalk"],
+    "watchapp": {
+        "watchface": true
+    },
+    "appKeys": {
+        "battery": 7,
+        "white": 6,
+        "bluetooth": 8,
+        "countformat": 5,
+        "dayfrom": 1,
+        "monthfrom": 2,
+        "showseconds": 3,
+        "showtriangle": 4,
+        "yearfrom": 0,
+        "temperature": 99,
+        "conditions": 98
   },
-  "appKeys": {
-    "dummy": 0
-  },
+  "capabilities": [ "configurable", "location"],
   "resources": {
     "media": []
   }

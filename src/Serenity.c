@@ -2,11 +2,11 @@
 #include "pebble.h"
 
 static Window *s_window;
-static Layer *s_simple_bg_layer, *s_date_layer, *s_hands_layer, *s_bt_layer;
-static TextLayer *s_day_label, *s_count_label, *s_battery_label;
+static Layer *s_simple_bg_layer, *s_date_layer, *s_hands_layer, *s_bt_layer, *s_weather_layer;
+static TextLayer *s_day_label, *s_count_label, *s_battery_label, *s_weather_label;
 
-static BitmapLayer *s_bt_icon_layer;
-static GBitmap  *s_bt_icon_bitmap;
+//static BitmapLayer *s_bt_icon_layer;
+//static GBitmap  *s_bt_icon_bitmap;
 
 
 static GPath *s_tick_paths[NUM_CLOCK_TICKS];
@@ -15,8 +15,7 @@ static GPath *s_triangle,*s_bt_path;
 
 static GColor s_background_color,s_forground_color;
 
-static char s_num_buffer[4], s_day_buffer[6], s_count_buffer[14],
-                s_date_buffer[10],s_battery_buffer[5];
+static char s_num_buffer[4], s_day_buffer[6], s_count_buffer[14], s_date_buffer[10],s_battery_buffer[5], s_weather_buffer[10];
 
 static struct tm then;
 
@@ -40,6 +39,9 @@ static void update_text_layers() {
     
     text_layer_set_background_color(s_battery_label,s_background_color);
     text_layer_set_text_color(s_battery_label, s_forground_color);
+    
+    text_layer_set_background_color(s_weather_label,s_background_color);
+    text_layer_set_text_color(s_weather_label, s_forground_color);
 }
     
 
@@ -202,71 +204,70 @@ static void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
   layer_mark_dirty(window_get_root_layer(s_window));
 }
 
+/* App Message Handelers */
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
-    Tuple *yearfrom_t = dict_find(iter, KEY_YEAR);
-    Tuple *monthfrom_t = dict_find(iter, KEY_MONTH);
-    Tuple *dayfrom_t = dict_find(iter, KEY_DAY);
-    Tuple *showseconds_t = dict_find(iter, KEY_SHOWSECONDS);
-    Tuple *showtriangle_t = dict_find(iter, KEY_SHOWTRIANGLE);
-    Tuple *format_t = dict_find(iter, KEY_FORMAT);
-    Tuple *white_t = dict_find(iter, KEY_BLACK);
-    Tuple *battery_t = dict_find(iter, KEY_BATTERY);
-    Tuple *bluetooth_t = dict_find(iter, KEY_BLUETOOTH);
+    
+    Tuple *t = dict_read_first(iter);
  
-//    APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Returned from settings");
-    
-    if (yearfrom_t) {
-//      APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Date Changed");
-        global_config.year = yearfrom_t->value->int32;
-        global_config.month = monthfrom_t->value->int8;
-        global_config.day = dayfrom_t->value->int8;
+    while (t != NULL) {
+        switch (t->key) {
+            case KEY_TEMPERATURE :
+                APP_LOG(APP_LOG_LEVEL_DEBUG,"Temerature: %d",t->value->int8);
+                break;
+            case KEY_YEAR :
+                global_config.year = t->value->int32;
+                t = dict_read_next(iter);
+                global_config.month = t->value->int8;
+                t = dict_read_next(iter);
+                global_config.day = t->value->int8;
 
-        then.tm_year = global_config.year - 1900;
-        then.tm_mon = global_config.month -1;
-        then.tm_mday = global_config.day;
-        update_counter (NULL);
-    }
-  
-    if (showseconds_t) {
-//        APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Seconds CHanged");
-        global_config.showseconds = showseconds_t->value->int8;
-        tick_timer_service_unsubscribe();
-        if (global_config.showseconds == 1) {
-            tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
-        } else {
-            tick_timer_service_subscribe(MINUTE_UNIT, handle_second_tick);
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Date Changed - %d %d %d",(int)global_config.year,global_config.month,global_config.day);
+                
+                then.tm_year = global_config.year - 1900;
+                then.tm_mon = global_config.month -1;
+                then.tm_mday = global_config.day;
+                update_counter (NULL);
+                break;
+            case KEY_SHOWSECONDS :
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Seconds CHanged %d",t->value->int8);
+                global_config.showseconds = t->value->int8;
+                tick_timer_service_unsubscribe();
+                tick_timer_service_subscribe(((global_config.showseconds == 1) ? SECOND_UNIT : MINUTE_UNIT), handle_second_tick);
+                break;
+            case KEY_SHOWTRIANGLE :
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Triangle Changed %d",t->value->int8);
+                global_config.showtriangle = t->value->int8;
+                break;
+            case KEY_FORMAT :
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Format changed %d",(int)t->value->int32);
+                global_config.countformat = t->value->int32;
+                break;
+            case KEY_BLACK :
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Black Changed %d",t->value->int8);
+                global_config.white = t->value->int8;
+                s_background_color = ((global_config.white == 0) ? GColorBlack : GColorWhite);
+                s_forground_color = ((global_config.white == 0) ? GColorWhite : GColorBlack);
+                update_text_layers();
+                break;
+            case KEY_BATTERY : 
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Battery Changed %d",t->value->int8);
+                global_config.battery = t->value->int8;
+                layer_set_hidden(text_layer_get_layer(s_battery_label),(global_config.battery == 0));
         }
+        t = dict_read_next(iter);
     }
-  
-    if (format_t) {
-//        APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Format changed");
-        global_config.countformat = format_t->value->int32;
-    }
-    
-    if (showtriangle_t) {
-//        APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Triangle Changed");
-        global_config.showtriangle = showtriangle_t->value->int8;
-    }
-    
-    if (white_t) {
-//        APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Black Changed");
-        global_config.white = white_t->value->int8;
-        s_background_color = ((global_config.white == 0) ? GColorBlack : GColorWhite);
-        s_forground_color = ((global_config.white == 0) ? GColorWhite : GColorBlack);
-
-        update_text_layers();
-    }
-    
-    if (battery_t) {
-//        APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Triangle Changed");
-        global_config.battery = battery_t->value->int8;
-        layer_set_hidden(text_layer_get_layer(s_battery_label),(global_config.battery == 0));
-    }
-//    if (bluetooth_t) {
-//        APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Triangle Changed");
-//        global_config.bluetooth = bluetooth_t->value->int8;
-//        layer_set_hidden(bitmap_layer_get_layer(s_bt_icon_layer),(global_config.bluetooth == 0));
-//    }
   
 //    APP_LOG (APP_LOG_LEVEL_DEBUG,"Configged : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
 //    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
@@ -317,7 +318,7 @@ static void window_load(Window *window) {
     text_layer_set_font(s_day_label, fonts_get_system_font(FONT_KEY_GOTHIC_18));
     layer_add_child(s_date_layer, text_layer_get_layer(s_day_label));
 
-    s_count_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 13 )/ 18)-10, 101, 21));
+    s_count_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 11 )/ 18)-1, 101, 21));
     text_layer_set_text_alignment(s_count_label,GTextAlignmentCenter);
     text_layer_set_text(s_count_label, s_count_buffer);
     text_layer_set_background_color(s_count_label, s_background_color);
@@ -326,6 +327,15 @@ static void window_load(Window *window) {
     layer_add_child(s_date_layer, text_layer_get_layer(s_count_label));
     layer_set_hidden(text_layer_get_layer(s_count_label),(global_config.countformat == FMT_BLANK));
     
+    s_weather_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 13 )/ 18)+1, 101, 21));
+    text_layer_set_text_alignment(s_weather_label,GTextAlignmentCenter);
+    text_layer_set_text(s_weather_label, "30, Thunder" /*s_count_buffer*/);
+    text_layer_set_background_color(s_weather_label, s_background_color);
+    text_layer_set_text_color(s_weather_label, s_forground_color);
+    text_layer_set_font(s_weather_label, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    layer_add_child(s_date_layer, text_layer_get_layer(s_weather_label));
+//    layer_set_hidden(text_layer_get_layer(s_count_label),(global_config.countformat == FMT_BLANK));
+   
     s_battery_label = text_layer_create(GRect(((bounds.size.w*5)/18)-30, centre.y-10, 61, 21));
     text_layer_set_text_alignment(s_battery_label,GTextAlignmentCenter);
     text_layer_set_text(s_battery_label, s_battery_buffer);
@@ -356,9 +366,10 @@ static void window_unload(Window *window) {
   text_layer_destroy(s_day_label);
   text_layer_destroy(s_count_label);
   text_layer_destroy(s_battery_label);
+  text_layer_destroy(s_weather_label);
   
-  gbitmap_destroy(s_bt_icon_bitmap);
-  bitmap_layer_destroy(s_bt_icon_layer);
+//  gbitmap_destroy(s_bt_icon_bitmap);
+//  bitmap_layer_destroy(s_bt_icon_layer);
 
   layer_destroy(s_hands_layer);
 
@@ -376,7 +387,8 @@ static void init() {
     s_num_buffer[0] = '\0';
     s_count_buffer[0] = '\0';
     s_battery_buffer[0] = '\0';
-  
+    s_weather_buffer[0] = '\0';
+    
     if (persist_exists(KEY_STRUCTURE)) {
         persist_read_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
 
@@ -456,6 +468,9 @@ static void init() {
     });
 
     app_message_register_inbox_received(inbox_received_handler);
+    app_message_register_inbox_dropped(inbox_dropped_callback);
+    app_message_register_outbox_failed(outbox_failed_callback);
+    app_message_register_outbox_sent(outbox_sent_callback); 
     app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 //    app_message_open(64,64);
 }
