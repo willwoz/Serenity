@@ -34,7 +34,7 @@ function getAndStoreConfigData() {
     countformat: $formatSelect.val(),
     white: $whiteCheckBox[0].checked,
     battery: $batteryCheckBox[0].checked,
-    bluetooth: $bluetoothCheckBox[0].checked
+    bluetooth: $bluetoothCheckBox[0].checked,
     showweather: $showweatherCheckBox[0].checked,
     showfahrenheit : $showfahrenheitCheckBox[0].checked
   };
