@@ -24,6 +24,8 @@ function getAndStoreConfigData() {
     var $batteryCheckBox = $('#batteryCheckBox');
     var $bluetoothCheckBox = $('#batteryCheckBox');
     var $whiteCheckBox = $('#whiteCheckBox');
+    var $showweatherCheckBox = $('#showweatherCheckBox');
+    var $showfahrenheitCheckBox = $('#fahrenheitCheckBox');
     
   var options = {
     countfrom: $countfromDate.val(),
@@ -33,6 +35,8 @@ function getAndStoreConfigData() {
     white: $whiteCheckBox[0].checked,
     battery: $batteryCheckBox[0].checked,
     bluetooth: $bluetoothCheckBox[0].checked
+    showweather: $showweatherCheckBox[0].checked,
+    showfahrenheit : $showfahrenheitCheckBox[0].checked
   };
 
   localStorage.countfrom = options.countfrom;
@@ -41,7 +45,9 @@ function getAndStoreConfigData() {
   localStorage.countformat = options.countformat;
   localStorage.white = options.white;
   localStorage.battery = options.battery;
-  localStorage.bluetooth = options.bluetooth
+  localStorage.bluetooth = options.bluetooth;
+  localStorage.showweather = options.showweather;
+  localStorage.showfahrenheit = options.showfahrenheit;
 
   console.log('Got options main.js: ' + JSON.stringify(options));
   return options;
@@ -55,6 +61,8 @@ function loadOptions() {
     var $batteryCheckBox = $('#batteryCheckBox');
     var $bluetoothCheckBox = $('#batteryCheckBox');
     var $whiteCheckBox = $('#whiteCheckBox');
+    var $showweatherCheckBox = $('#showweatherCheckBox');
+    var $showfahrenheitCheckBox = $('#fahrenheitCheckBox');
 
     if (localStorage.countfrom) {
         $countfromDate[0].value = localStorage.countfrom;
@@ -62,8 +70,10 @@ function loadOptions() {
         $showtriangleCheckBox[0].checked = localStorage.showtriangle === 'true';
         $formatSelect[0].value = localStorage.countformat;
         $batteryCheckBox[0].checked = localStorage.battery === 'true';
-        $bluetoothCheckBox[0].checked = localStorage.bluetooth === 'true';
-        $whiteCheckBox[0].checked = localStorage.white === 'true';
+        $bluetoothCheckBox[0].checked = (localStorage.bluetooth === 'true');
+        $whiteCheckBox[0].checked = (localStorage.white === 'true');
+        $showweatherCheckBox[0].checked =(localStorage.showweather === 'true');
+        $showfahrenheitCheckBox[0].checked = (localStorage.showfahrenheit === 'true');
     }
 }
 
