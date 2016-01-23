@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
-    <link rel='stylesheet' type='text/css' href='/Serenity/bower_components/Slate/dist/css/slate.min.css'>
+    <link rel='stylesheet' type='text/css' href='/Serenity//bower_components/Slate/dist/css/slate.min.css'>
     <link rel='stylesheet' type='text/css' href='/Serenity/css/style.css'>
 </head>
 <body>
@@ -51,12 +51,19 @@
     </div>
 
     <div class='item-container'>
-        <div class='item-container-header'>Weather Toggles</div>
+        <div class='item-container-header'>Weather Settings</div>
         <div class='item-container-content'>
             <label class="item">
                 Show Weather
                 <input id="showweatherCheckBox" type="checkbox" class="item-toggle" checked>
             </label>
+            <label class="item">
+                Update
+                <input id="weatherpollSlider" type="range" min='15' max='120' step='15' class="item-slider" name="slider-1" value="15">
+                    <div class="item-input-wrapper item-slider-text">
+                        <input type="number" min='15' max='120' step='15' class="item-input"  name="slider-1" value="15">
+                    </div>
+                </label>
             <label class="item">
                 Use Fahrenheit
                 <input id="showfahrenheitCheckBox" type="checkbox" class="item-toggle" checked>
