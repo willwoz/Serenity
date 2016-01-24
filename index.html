@@ -58,14 +58,15 @@
                 <input id="showweatherCheckBox" type="checkbox" class="item-toggle" checked>
             </label>
             <label class="item">
-                <input id="weatherpollSlider" type="range" min='15' max='120' step='15' class="item-slider" name="slider-1" value="15">
-                    <div class="item-input-wrapper item-slider-text">
-                        <input type="number" min='15' max='120' step='15' class="item-input"  name="slider-1" value="15">
-                    </div>
-                </label>
-            <label class="item">
                 Use Fahrenheit
-                <input id="showfahrenheitCheckBox" type="checkbox" class="item-toggle" checked>
+                <input id="showfahrenheitCheckBox" type="checkbox" class="item-toggle" unchecked>
+            </label>
+            <label class='item'>Weather Update Frequency 15 -> 120 minutes</label>
+            <label class="item">
+                <input id="weatherpollSlider" type="range" min='15' max='120' step='15' class="item-slider" name="slider-1" value="60">
+                    <div class="item-input-wrapper item-slider-text">
+                        <input type="number" min='15' max='120' step='15' class="item-input"  name="slider-1" value="60">
+                    </div>
             </label>
         </div>
     </div>
