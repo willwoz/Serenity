@@ -206,9 +206,10 @@ static void update_weather(struct tm *tick_time) {
     // Get weather update every 30 minutes
     if (tick_time == NULL) {
         // forced weather update
+#ifdef DO_DEBUG_LOGS
         APP_LOG (APP_LOG_LEVEL_DEBUG,"Polling Checked: time to poll =time_to_poll: %d - poll_once: %d",s_time_to_poll,s_weather_updated);
+#endif
         app_message_outbox_begin(&iter);
-
         // Add a key-value pair
         dict_write_uint8(iter, 0, 0);
         // Send the message!
@@ -216,12 +217,15 @@ static void update_weather(struct tm *tick_time) {
     } else {
         if((tick_time->tm_min % WEATHER_POLL_DIV) == 0) {
             if (s_weather_updated == 0) {
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"Polling Weather min: %d div: %d poll_once: %d time_to_poll: %d",tick_time->tm_min,WEATHER_POLL_DIV,s_weather_updated,s_time_to_poll);
+#endif
                 if (s_time_to_poll == 0) {
                     // Begin dictionary
                     s_time_to_poll = global_config.weatherpoll;
+#ifdef DO_DEBUG_LOGS
                     APP_LOG (APP_LOG_LEVEL_DEBUG,"Polling Checked: time to poll =time_to_poll: %d - poll_once: %d",s_time_to_poll,s_weather_updated);
-
+#endif
                     app_message_outbox_begin(&iter);
 
                     // Add a key-value pair
@@ -272,8 +276,12 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
                 break;
             case KEY_CONDITIONS :
                 snprintf (s_weather_buffer,sizeof(s_weather_buffer),"%d%s, %s",current_temp,((global_config.showfahrenheit == 1)?"F":"C"), t->value->cstring);
+                
+#ifdef DO_DEBUG_LOGS
                APP_LOG(APP_LOG_LEVEL_DEBUG,"Temerature Message: %d%s, %s",current_temp,((global_config.showfahrenheit == 1)?"F":"C"), t->value->cstring);
+#endif
                 update_text_layers();
+                layer_set_hidden(text_layer_get_layer(s_weather_label),(global_config.showweather == 0));
                 break;
             case KEY_YEAR :
                 global_config.year = t->value->int32;
@@ -285,55 +293,81 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
                 global_config.month = t->value->int8;
                 break;
             case KEY_SHOWSECONDS :
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Seconds CHanged %d",t->value->int8);
+#endif
                 global_config.showseconds = t->value->int8;
                 tick_timer_service_unsubscribe();
                 tick_timer_service_subscribe(((global_config.showseconds == 1) ? SECOND_UNIT : MINUTE_UNIT), handle_second_tick);
                 break;
             case KEY_SHOWTRIANGLE :
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Triangle Changed %d",t->value->int8);
+#endif
                 global_config.showtriangle = t->value->int8;
                 break;
             case KEY_FORMAT :
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Format changed %d",(int)t->value->int32);
+#endif
                 global_config.countformat = t->value->int32;
                 break;
             case KEY_BLACK :
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Black Changed %d",t->value->int8);
+#endif
                 global_config.white = t->value->int8;
                 s_background_color = ((global_config.white == 0) ? GColorBlack : GColorWhite);
                 s_forground_color = ((global_config.white == 0) ? GColorWhite : GColorBlack);
                 update_text_layers();
                 break;
             case KEY_BATTERY : 
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Battery Changed %d",t->value->int8);
+#endif
                 global_config.battery = t->value->int8;
                 layer_set_hidden(text_layer_get_layer(s_battery_label),(global_config.battery == 0));
                 break;
             case KEY_WEATHER :
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Weather Changed %d",t->value->int8);
+#endif
                 global_config.showweather = t->value->int8;
                 layer_set_hidden(text_layer_get_layer(s_weather_label),(global_config.showweather == 0));
                 update_weather(NULL);
                 break;
             case KEY_FAHRENHEIT :
+#ifdef DO_DEBUG_LOGS
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Farheneit Changed %d",t->value->int8);
+#endif
                 global_config.showfahrenheit = t->value->int8;
                 update_weather (NULL);
                 break;
+            case KEY_WEATHERPOLL:
+#ifdef DO_DEBUG_LOGS
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Update Changed %d",t->value->int8);
+#endif
+                global_config.weatherpoll = t->value->int8;
+                s_time_to_poll = global_config.weatherpoll;
         }
         t = dict_read_next(iter);
     }
   
-//    APP_LOG (APP_LOG_LEVEL_DEBUG,"AppMessage : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-//    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
-//             global_config.showseconds,
-//             (int)global_config.countformat,
-//             global_config.showtriangle,
-//             global_config.battery,
-//             global_config.bluetooth,
-//             global_config.white);
-                
+#ifdef DO_DEBUG_LOGS
+    APP_LOG (APP_LOG_LEVEL_DEBUG,"AppMessage : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
+    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
+        global_config.showseconds,
+        (int)global_config.countformat,
+        global_config.showtriangle,
+        global_config.battery,
+        global_config.bluetooth,
+        global_config.white,
+        global_config.showweather,
+        global_config.showfahrenheit,
+        global_config.weatherpoll
+        );  
+#endif
+    
      then.tm_year = global_config.year - 1900;
      then.tm_mon = global_config.month -1;
      then.tm_mday = global_config.day;
@@ -430,8 +464,9 @@ static void init_config() {
     if (persist_exists(KEY_STRUCTURE)) {
         persist_read_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
 
-   APP_LOG (APP_LOG_LEVEL_DEBUG,"Read : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-       APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
+#ifdef DO_DEBUG_LOGS
+        APP_LOG (APP_LOG_LEVEL_DEBUG,"Read : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
+        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
             global_config.showseconds,
             (int)global_config.countformat,
             global_config.showtriangle,
@@ -442,6 +477,8 @@ static void init_config() {
             global_config.showfahrenheit,
             global_config.weatherpoll
             );  
+#endif
+        
     } else {
         global_config.year = 2014;
         global_config.month = 11;
@@ -454,9 +491,10 @@ static void init_config() {
         global_config.white = 0;
         global_config.showweather = 1;
         global_config.showfahrenheit = 0;
-        global_config.weatherpoll = WEATHER_POLL_DIV;
-       APP_LOG (APP_LOG_LEVEL_DEBUG,"Set : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-       APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
+        global_config.weatherpoll = 60;
+#ifdef DO_DEBUG_LOGS
+        APP_LOG (APP_LOG_LEVEL_DEBUG,"Set : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
+        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
             global_config.showseconds,
             (int)global_config.countformat,
             global_config.showtriangle,
@@ -467,6 +505,7 @@ static void init_config() {
             global_config.showfahrenheit,
             global_config.weatherpoll
             );
+#endif
     }
     s_time_to_poll = global_config.weatherpoll;
     
@@ -482,6 +521,11 @@ static void init_config() {
 
 static void init() {
     s_window = window_create();
+    window_set_window_handlers(s_window, (WindowHandlers) {
+        .load = window_load,
+        .unload = window_unload,
+    });
+    window_stack_push(s_window, true);
 
     s_day_buffer[0] = '\0';
     s_num_buffer[0] = '\0';
@@ -533,19 +577,18 @@ static void init() {
     app_message_register_outbox_sent(outbox_sent_callback); 
     app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
 
-    window_set_window_handlers(s_window, (WindowHandlers) {
-        .load = window_load,
-        .unload = window_unload,
-    });
-    window_stack_push(s_window, true);
 
   //    app_message_open(64,64);
 }
 
 static void deinit() {
+#ifdef DO_DEBUG_LOGS
+    int written = persist_write_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
+    APP_LOG (APP_LOG_LEVEL_DEBUG,"Wrote : %d, Size : %d",written,sizeof(global_config));
+#else
     persist_write_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
-//    APP_LOG (APP_LOG_LEVEL_DEBUG,"Wrote : %d, Size : %d",written,sizeof(global_config));
-
+#endif
+   
     gpath_destroy(s_minute_arrow);
     gpath_destroy(s_hour_arrow);
 
@@ -554,6 +597,7 @@ static void deinit() {
     }
 
     gpath_destroy(s_triangle);
+    gpath_destroy(s_bt_path);
     tick_timer_service_unsubscribe();
     window_destroy(s_window);
 }

@@ -2,6 +2,8 @@
 
 #include "pebble.h"
 
+// #define DO_DEBUG_LOGS
+
 #define NUM_CLOCK_TICKS 13
 #define NUM_CLOCK_TICKS_WHITE 8
 #define NUM_CLOCK_TICKS_RED 13

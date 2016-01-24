@@ -70,7 +70,7 @@ Pebble.addEventListener('appmessage', function(e) {
 
 Pebble.addEventListener('showConfiguration', function() {
 //     var url = 'https://willwoz.github.io/Serenity/';
-    var url = 'https://58a1fe51.ngrok.io';
+    var url = 'https://6eef9344.ngrok.io';
     
     console.log('Showing configuration page: ' + url);
 
@@ -96,7 +96,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
             bluetooth: configData.bluetooth,
             showweather: configData.showweather,
             showfahrenheit: configData.showfahrenheit,
-            weatherpoll: configData.weatherpoll
+            weatherpoll: parseInt(configData.weatherpoll)
         }, function() {
             console.log('Send successful!');
         }, function() {
