@@ -17,8 +17,13 @@ struct dayface_config {
     uint8_t battery; /*show battery*/
     uint8_t bluetooth; /*show bluetooth*/
     uint8_t showweather;
+    uint8_t weatherpoll;
     uint8_t showfahrenheit;
 } __attribute__((__packed__)) global_config;
+
+#define WEATHER_POLL_DIV 15
+static int s_time_to_poll;
+static int s_weather_updated = 0;
 
 #define FMT_DAYS    1
 #define FMT_ZEN     2
@@ -39,9 +44,11 @@ struct dayface_config {
 #define KEY_BLUETOOTH       8
 #define KEY_WEATHER         9
 #define KEY_FAHRENHEIT      10
-#define KEY_TEMPERATURE     12
-#define KEY_CONDITIONS      13
-#define KEY_TOTAL_KEYS      13
+#define KEY_WEATHERPOLL     11
+#define KEY_TEMPERATURE     20
+#define KEY_CONDITIONS      21
+
+#define KEY_TOTAL_KEYS      21
 
 static const struct GPathInfo ANALOG_BG_POINTS[] = {
   { 4, (GPoint []){ /*1*/

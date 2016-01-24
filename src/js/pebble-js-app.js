@@ -63,40 +63,44 @@ Pebble.addEventListener('ready',
 );
 
 Pebble.addEventListener('appmessage', function(e) {
-  console.log('AppMessage received')
-  getWeather()
+    console.log('AppMessage received')
+    getWeather()
 })
 
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'https://willwoz.github.io/Serenity/';
+//     var url = 'https://willwoz.github.io/Serenity/';
+    var url = 'https://58a1fe51.ngrok.io';
+    
+    console.log('Showing configuration page: ' + url);
 
-  console.log('Showing configuration page: ' + url);
-
-  Pebble.openURL(url);
+    Pebble.openURL(url);
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {
-  var configData = JSON.parse(decodeURIComponent(e.response));
-  var datebits = configData.countfrom.split('-');
-  
-  console.log('Configuration page returned: ' + configData.countformat + ' ' + JSON.stringify(configData));
+    var configData = JSON.parse(decodeURIComponent(e.response));
+    var datebits = configData.countfrom.split('-');
+    
+    console.log('Configuration page returned: ' + configData.countformat + ' ' + JSON.stringify(configData));
 
-  if (configData.countfrom) {
-    Pebble.sendAppMessage({
-      yearfrom: parseInt(datebits[0]),
-      dayfrom: parseInt(datebits[2]),
-      monthfrom: parseInt(datebits[1]),
-      showseconds: configData.showseconds,
-      showtriangle: configData.showtriangle,
-      countformat: parseInt(configData.countformat),
-      white: configData.white,
-      battery: configData.battery,
-      bluetooth: configData.bluetooth,
-    }, function() {
-      console.log('Send successful!');
-    }, function() {
-      console.log('Send failed!');
-    });
-  }
+    if (configData.countfrom) {
+        Pebble.sendAppMessage({
+            yearfrom: parseInt(datebits[0]),
+            dayfrom: parseInt(datebits[2]),
+            monthfrom: parseInt(datebits[1]),
+            showseconds: configData.showseconds,
+            showtriangle: configData.showtriangle,
+            countformat: parseInt(configData.countformat),
+            white: configData.white,
+            battery: configData.battery,
+            bluetooth: configData.bluetooth,
+            showweather: configData.showweather,
+            showfahrenheit: configData.showfahrenheit,
+            weatherpoll: configData.weatherpoll
+        }, function() {
+            console.log('Send successful!');
+        }, function() {
+            console.log('Send failed!');
+        });
+    }
 });

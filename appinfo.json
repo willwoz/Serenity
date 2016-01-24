@@ -2,17 +2,18 @@
     "appKeys": {
         "battery": 7,
         "bluetooth": 8,
-        "conditions": 13,
+        "conditions": 21,
         "countformat": 5,
         "dayfrom": 1,
         "monthfrom": 2,
         "showseconds": 3,
         "showtriangle": 4,
-        "temperature": 12,
+        "temperature": 20,
         "white": 6,
         "yearfrom": 0,
         "showweather": 9,
-        "showfahrenheit": 10
+        "showfahrenheit": 10,
+        "weatherpoll": 11
     },
     "capabilities": [
         "location",
@@ -32,7 +33,7 @@
         "chalk"
     ],
     "uuid": "d140d7f5-06d0-40fd-954d-419a085fbe36",
-    "versionLabel": "0.1",
+    "versionLabel": "0.5",
     "watchapp": {
         "watchface": true
     }
