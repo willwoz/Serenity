@@ -18,7 +18,8 @@ static GColor s_background_color,s_forground_color;
 static char s_num_buffer[4], s_day_buffer[6], s_count_buffer[14], s_date_buffer[10],s_battery_buffer[5], s_weather_buffer[20];
 
 static struct tm then;
-static int current_temp;
+static int s_current_temp;
+static char s_current_conditions[15];
 
 static void bluetooth_callback(bool connected) {
     // Show icon if disconnected
@@ -270,15 +271,20 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
     while (t != NULL) {
         switch (t->key) {
             case KEY_TEMPERATURE :           
-                current_temp = t->value->int8;
+                s_current_temp = t->value->int8;
                 if (global_config.showfahrenheit == 1)
-                    current_temp = ((current_temp * 9) / 5) + 32;
+                    s_current_temp = ((s_current_temp * 9) / 5) + 32;
+                snprintf (s_weather_buffer,sizeof(s_weather_buffer),"%d%s, %s",s_current_temp,((global_config.showfahrenheit == 1)?"F":"C"), s_current_conditions);
+#ifdef DO_DEBUG_LOGS
+                APP_LOG(APP_LOG_LEVEL_DEBUG,"Temerature Message: %d%s, %s",t->value->int8,((global_config.showfahrenheit == 1)?"F":"C"), s_current_conditions);
+#endif
                 break;
             case KEY_CONDITIONS :
-                snprintf (s_weather_buffer,sizeof(s_weather_buffer),"%d%s, %s",current_temp,((global_config.showfahrenheit == 1)?"F":"C"), t->value->cstring);
+                snprintf (s_current_conditions,sizeof(s_current_conditions),"%s", t->value->cstring);
+                snprintf (s_weather_buffer,sizeof(s_weather_buffer),"%d%s, %s",s_current_temp,((global_config.showfahrenheit == 1)?"F":"C"), s_current_conditions);
                 
 #ifdef DO_DEBUG_LOGS
-               APP_LOG(APP_LOG_LEVEL_DEBUG,"Temerature Message: %d%s, %s",current_temp,((global_config.showfahrenheit == 1)?"F":"C"), t->value->cstring);
+               APP_LOG(APP_LOG_LEVEL_DEBUG,"Condition Message: %d%s, %s",s_current_temp,((global_config.showfahrenheit == 1)?"F":"C"), s_current_conditions);
 #endif
                 update_text_layers();
                 layer_set_hidden(text_layer_get_layer(s_weather_label),(global_config.showweather == 0));
