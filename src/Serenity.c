@@ -348,14 +348,6 @@ static void window_load(Window *window) {
 
     s_background_color = ((global_config.white == 0) ? GColorBlack : GColorWhite);
     s_forground_color = ((global_config.white == 0) ? GColorWhite : GColorBlack);
-/*    APP_LOG (APP_LOG_LEVEL_DEBUG,"Configged : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
-             global_config.showseconds,
-             (int)global_config.countformat,
-             global_config.showtriangle,
-             global_config.battery,
-             global_config.bluetooth,
-             global_config.white);*/
     
     s_simple_bg_layer = layer_create(bounds);
     layer_set_update_proc(s_simple_bg_layer, bg_update_proc);
@@ -439,14 +431,17 @@ static void init_config() {
         persist_read_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
 
    APP_LOG (APP_LOG_LEVEL_DEBUG,"Read : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-   APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
+       APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
             global_config.showseconds,
             (int)global_config.countformat,
             global_config.showtriangle,
             global_config.battery,
             global_config.bluetooth,
-            global_config.white);
-  
+            global_config.white,
+            global_config.showweather,
+            global_config.showfahrenheit,
+            global_config.weatherpoll
+            );  
     } else {
         global_config.year = 2014;
         global_config.month = 11;
@@ -461,13 +456,17 @@ static void init_config() {
         global_config.showfahrenheit = 0;
         global_config.weatherpoll = WEATHER_POLL_DIV;
        APP_LOG (APP_LOG_LEVEL_DEBUG,"Set : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-       APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d",
+       APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
             global_config.showseconds,
             (int)global_config.countformat,
             global_config.showtriangle,
             global_config.battery,
             global_config.bluetooth,
-            global_config.white);
+            global_config.white,
+            global_config.showweather,
+            global_config.showfahrenheit,
+            global_config.weatherpoll
+            );
     }
     s_time_to_poll = global_config.weatherpoll;
     
@@ -483,11 +482,6 @@ static void init_config() {
 
 static void init() {
     s_window = window_create();
-    window_set_window_handlers(s_window, (WindowHandlers) {
-        .load = window_load,
-        .unload = window_unload,
-    });
-    window_stack_push(s_window, true);
 
     s_day_buffer[0] = '\0';
     s_num_buffer[0] = '\0';
@@ -495,6 +489,7 @@ static void init() {
     s_battery_buffer[0] = '\0';
     
     init_config();
+    update_weather(NULL);
     update_counter (NULL);
  
     // init hand paths
@@ -537,7 +532,14 @@ static void init() {
     app_message_register_outbox_failed(outbox_failed_callback);
     app_message_register_outbox_sent(outbox_sent_callback); 
     app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
-//    app_message_open(64,64);
+
+    window_set_window_handlers(s_window, (WindowHandlers) {
+        .load = window_load,
+        .unload = window_unload,
+    });
+    window_stack_push(s_window, true);
+
+  //    app_message_open(64,64);
 }
 
 static void deinit() {
