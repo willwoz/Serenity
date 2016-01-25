@@ -13,7 +13,9 @@
         "yearfrom": 0,
         "showweather": 9,
         "showfahrenheit": 10,
-        "weatherpoll": 11
+        "weatherpoll": 11,
+        "showdate": 12,
+        "showlocation": 13
     },
     "capabilities": [
         "location",

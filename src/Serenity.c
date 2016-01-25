@@ -3,7 +3,7 @@
 
 static Window *s_window;
 static Layer *s_simple_bg_layer, *s_date_layer, *s_hands_layer, *s_bt_layer, *s_weather_layer;
-static TextLayer *s_day_label, *s_count_label, *s_battery_label, *s_weather_label;
+static TextLayer *s_date_label, *s_count_label, *s_battery_label, *s_weather_label;
 
 //static BitmapLayer *s_bt_icon_layer;
 //static GBitmap  *s_bt_icon_bitmap;
@@ -33,17 +33,22 @@ static void bluetooth_callback(bool connected) {
 
 static void update_text_layers() {
     /*just cause I can't think of a better way to do this*/
-    text_layer_set_background_color(s_day_label, s_background_color);
-    text_layer_set_text_color(s_day_label, s_forground_color);
+    text_layer_set_background_color(s_date_label, s_background_color);
+    text_layer_set_text_color(s_date_label, s_forground_color);
+    layer_set_hidden(text_layer_get_layer(s_date_label),(global_config.showdate == 0));
     
     text_layer_set_background_color(s_count_label, s_background_color);
     text_layer_set_text_color(s_count_label, s_forground_color);
+    layer_set_hidden(text_layer_get_layer(s_count_label),(global_config.countformat == FMT_BLANK));
+
     
     text_layer_set_background_color(s_battery_label,s_background_color);
     text_layer_set_text_color(s_battery_label, s_forground_color);
-    
+    layer_set_hidden(text_layer_get_layer(s_battery_label),(global_config.battery == 0));
+   
     text_layer_set_background_color(s_weather_label,s_background_color);
     text_layer_set_text_color(s_weather_label, s_forground_color);
+    layer_set_hidden(text_layer_get_layer(s_weather_label),(global_config.showweather == 0));
 }
     
 
@@ -170,7 +175,6 @@ static void update_counter (struct tm *now_secs) {
             
     }
     text_layer_set_text(s_count_label, s_count_buffer);
-    layer_set_hidden(text_layer_get_layer(s_count_label),(global_config.countformat == FMT_BLANK));
 }
     
 static void date_update_proc(Layer *layer, GContext *ctx) {
@@ -182,7 +186,7 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
     update_text_layers();
     
     strftime(s_date_buffer, sizeof(s_date_buffer), "%a %d", now);
-    text_layer_set_text(s_day_label, s_date_buffer);
+    text_layer_set_text(s_date_label, s_date_buffer);
   
     update_counter(now);
 
@@ -200,7 +204,10 @@ static void date_update_proc(Layer *layer, GContext *ctx) {
           snprintf(s_battery_buffer, sizeof(s_battery_buffer), "%d%%", charge_state.charge_percent);
         }
     }
+    
+    update_text_layers();
 }
+
 static void update_weather(struct tm *tick_time) {
     DictionaryIterator *iter;
 
@@ -325,7 +332,6 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
                 global_config.white = t->value->int8;
                 s_background_color = ((global_config.white == 0) ? GColorBlack : GColorWhite);
                 s_forground_color = ((global_config.white == 0) ? GColorWhite : GColorBlack);
-                update_text_layers();
                 break;
             case KEY_BATTERY : 
 #ifdef DO_DEBUG_LOGS
@@ -355,13 +361,26 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 #endif
                 global_config.weatherpoll = t->value->int8;
                 s_time_to_poll = global_config.weatherpoll;
+                break;
+            case KEY_SHOWDATE:
+#ifdef DO_DEBUG_LOGS
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: ShowDate Changed %d",t->value->int8);
+#endif
+                global_config.showdate = t->value->int8;
+                break;
+            case KEY_SHOWLOCATION:
+#ifdef DO_DEBUG_LOGS
+                APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: ShowLocation Changed %d",t->value->int8);
+#endif
+                global_config.showlocation = t->value->int8;
         }
         t = dict_read_next(iter);
     }
+
   
 #ifdef DO_DEBUG_LOGS
     APP_LOG (APP_LOG_LEVEL_DEBUG,"AppMessage : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
+    APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d, f %d,p %d, date %d, loc %d",
         global_config.showseconds,
         (int)global_config.countformat,
         global_config.showtriangle,
@@ -370,14 +389,17 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
         global_config.white,
         global_config.showweather,
         global_config.showfahrenheit,
-        global_config.weatherpoll
+        global_config.weatherpoll,
+        global_config.showdate,
+        global_config.showlocation
         );  
 #endif
     
-     then.tm_year = global_config.year - 1900;
-     then.tm_mon = global_config.month -1;
-     then.tm_mday = global_config.day;
-     update_counter (NULL);
+    then.tm_year = global_config.year - 1900;
+    then.tm_mon = global_config.month -1;
+    then.tm_mday = global_config.day;
+    update_counter (NULL);
+    update_text_layers();
 }
 
 
@@ -402,20 +424,21 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_date_layer, date_update_proc);
     layer_add_child(window_layer, s_date_layer);
 
-    s_day_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 3 )/18)-5, 101, 21));
-    text_layer_set_text_alignment(s_day_label,GTextAlignmentCenter);
-    text_layer_set_text(s_day_label, s_day_buffer);
-    text_layer_set_background_color(s_day_label, s_background_color);
-    text_layer_set_text_color(s_day_label, s_forground_color);
-    text_layer_set_font(s_day_label, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    layer_add_child(s_date_layer, text_layer_get_layer(s_day_label));
+    s_date_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 3 )/18)-5, 101, 21));
+    text_layer_set_text_alignment(s_date_label,GTextAlignmentCenter);
+    text_layer_set_text(s_date_label, s_day_buffer);
+    text_layer_set_background_color(s_date_label, s_background_color);
+    text_layer_set_text_color(s_date_label, s_forground_color);
+    text_layer_set_font(s_date_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+    layer_add_child(s_date_layer, text_layer_get_layer(s_date_label));
+    layer_set_hidden(text_layer_get_layer(s_date_label),(global_config.showdate == 0));
 
     s_count_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 11 )/ 18)-1, 101, 21));
     text_layer_set_text_alignment(s_count_label,GTextAlignmentCenter);
     text_layer_set_text(s_count_label, s_count_buffer);
     text_layer_set_background_color(s_count_label, s_background_color);
     text_layer_set_text_color(s_count_label, s_forground_color);
-    text_layer_set_font(s_count_label, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_count_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
     layer_add_child(s_date_layer, text_layer_get_layer(s_count_label));
     layer_set_hidden(text_layer_get_layer(s_count_label),(global_config.countformat == FMT_BLANK));
     
@@ -424,7 +447,7 @@ static void window_load(Window *window) {
     text_layer_set_text(s_weather_label, s_weather_buffer);
     text_layer_set_background_color(s_weather_label, s_background_color);
     text_layer_set_text_color(s_weather_label, s_forground_color);
-    text_layer_set_font(s_weather_label, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_font(s_weather_label, fonts_get_system_font(FONT_KEY_GOTHIC_14));
     layer_add_child(s_date_layer, text_layer_get_layer(s_weather_label));
     layer_set_hidden(text_layer_get_layer(s_weather_label),(global_config.showweather == 0));
    
@@ -454,7 +477,7 @@ static void window_unload(Window *window) {
   layer_destroy(s_simple_bg_layer);
   layer_destroy(s_date_layer);
 
-  text_layer_destroy(s_day_label);
+  text_layer_destroy(s_date_label);
   text_layer_destroy(s_count_label);
   text_layer_destroy(s_battery_label);
   text_layer_destroy(s_weather_label);
@@ -472,7 +495,7 @@ static void init_config() {
 
 #ifdef DO_DEBUG_LOGS
         APP_LOG (APP_LOG_LEVEL_DEBUG,"Read : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
+        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d, date %d, loc %d",
             global_config.showseconds,
             (int)global_config.countformat,
             global_config.showtriangle,
@@ -481,8 +504,10 @@ static void init_config() {
             global_config.white,
             global_config.showweather,
             global_config.showfahrenheit,
-            global_config.weatherpoll
-            );  
+            global_config.weatherpoll,
+            global_config.showdate,
+            global_config.showlocation
+        );  
 #endif
         
     } else {
@@ -498,9 +523,11 @@ static void init_config() {
         global_config.showweather = 1;
         global_config.showfahrenheit = 0;
         global_config.weatherpoll = 60;
+        global_config.showdate = 1;
+        global_config.showlocation = 1;
 #ifdef DO_DEBUG_LOGS
         APP_LOG (APP_LOG_LEVEL_DEBUG,"Set : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d",
+        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d, date %d, loc %d",
             global_config.showseconds,
             (int)global_config.countformat,
             global_config.showtriangle,
@@ -509,8 +536,10 @@ static void init_config() {
             global_config.white,
             global_config.showweather,
             global_config.showfahrenheit,
-            global_config.weatherpoll
-            );
+            global_config.weatherpoll,
+            global_config.showdate,
+            global_config.showlocation
+        );  
 #endif
     }
     s_time_to_poll = global_config.weatherpoll;

@@ -21,6 +21,8 @@ struct dayface_config {
     uint8_t showweather;
     uint8_t weatherpoll;
     uint8_t showfahrenheit;
+    uint8_t showdate;
+    uint8_t showlocation;
 } __attribute__((__packed__)) global_config;
 
 #define WEATHER_POLL_DIV 15
@@ -47,6 +49,8 @@ static int s_weather_updated = 0;
 #define KEY_WEATHER         9
 #define KEY_FAHRENHEIT      10
 #define KEY_WEATHERPOLL     11
+#define KEY_SHOWDATE        12
+#define KEY_SHOWLOCATION    13
 #define KEY_TEMPERATURE     20
 #define KEY_CONDITIONS      21
 

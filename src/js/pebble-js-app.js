@@ -96,7 +96,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
             bluetooth: configData.bluetooth,
             showweather: configData.showweather,
             showfahrenheit: configData.showfahrenheit,
-            weatherpoll: parseInt(configData.weatherpoll)
+            weatherpoll: parseInt(configData.weatherpoll),
+            showdate: configData.showdate,
+            showlocation: configData.showlocation
         }, function() {
             console.log('Send successful!');
         }, function() {
