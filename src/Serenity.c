@@ -35,7 +35,11 @@ static void update_text_layers() {
     
     text_layer_set_background_color(s_loc_label, s_background_color);
     text_layer_set_text_color(s_loc_label, s_forground_color);
-    layer_set_hidden(text_layer_get_layer(s_loc_label),(global_config.showlocation == 0));
+    if (global_config.showweather == 1) {
+        layer_set_hidden(text_layer_get_layer(s_loc_label),(global_config.showlocation == 0));
+    } else {
+        layer_set_hidden(text_layer_get_layer(s_loc_label),true);
+    }
 
     text_layer_set_background_color(s_count_label, s_background_color);
     text_layer_set_text_color(s_count_label, s_forground_color);
@@ -367,7 +371,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
                 APP_LOG (APP_LOG_LEVEL_DEBUG,"INFO: Update Changed %d",t->value->int8);
 #endif
                 global_config.weatherpoll = t->value->int8;
-                s_time_to_poll = global_config.weatherpoll;
+                s_time_to_poll = 0;
                 break;
             case KEY_SHOWDATE:
 #ifdef DO_DEBUG_LOGS
@@ -506,58 +510,63 @@ static void window_unload(Window *window) {
 }
 
 static void init_config() {
-    if (persist_exists(KEY_STRUCTURE)) {
-        persist_read_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
+    int version = persist_read_int(STORAGE_VERSION_KEY);
+    
+    switch (version) {
+        case STORAGE_VERSION :
+            /* CUrrent version of config */
+            persist_read_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
 
 #ifdef DO_DEBUG_LOGS
-        APP_LOG (APP_LOG_LEVEL_DEBUG,"Read : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d, date %d, loc %d",
-            global_config.showseconds,
-            (int)global_config.countformat,
-            global_config.showtriangle,
-            global_config.battery,
-            global_config.bluetooth,
-            global_config.white,
-            global_config.showweather,
-            global_config.showfahrenheit,
-            global_config.weatherpoll,
-            global_config.showdate,
-            global_config.showlocation
-        );  
+            APP_LOG (APP_LOG_LEVEL_DEBUG,"Read %d : year - %d, month - %d, - day %d",version, (int)global_config.year, global_config.month, global_config.day);
+            APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d, date %d, loc %d",
+                global_config.showseconds,
+                (int)global_config.countformat,
+                global_config.showtriangle,
+                global_config.battery,
+                global_config.bluetooth,
+                global_config.white,
+                global_config.showweather,
+                global_config.showfahrenheit,
+                global_config.weatherpoll,
+                global_config.showdate,
+                global_config.showlocation
+            );  
 #endif
-        
-    } else {
-        global_config.year = 2014;
-        global_config.month = 11;
-        global_config.day = 8;
-        global_config.showseconds = 1;
-        global_config.countformat = FMT_DAYS;
-        global_config.showtriangle = 1;
-        global_config.battery = 0;
-        global_config.bluetooth = 1;
-        global_config.white = 0;
-        global_config.showweather = 1;
-        global_config.showfahrenheit = 0;
-        global_config.weatherpoll = 60;
-        global_config.showdate = 1;
-        global_config.showlocation = 1;
+            break;
+        default : 
+            global_config.year = 2014;
+            global_config.month = 11;
+            global_config.day = 8;
+            global_config.showseconds = 1;
+            global_config.countformat = FMT_DAYS;
+            global_config.showtriangle = 1;
+            global_config.battery = 0;
+            global_config.bluetooth = 1;
+            global_config.white = 0;
+            global_config.showweather = 1;
+            global_config.showfahrenheit = 0;
+            global_config.weatherpoll = 60;
+            global_config.showdate = 1;
+            global_config.showlocation = 1;
 #ifdef DO_DEBUG_LOGS
-        APP_LOG (APP_LOG_LEVEL_DEBUG,"Set : year - %d, month - %d, - day %d", (int)global_config.year, global_config.month, global_config.day);
-        APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d, date %d, loc %d",
-            global_config.showseconds,
-            (int)global_config.countformat,
-            global_config.showtriangle,
-            global_config.battery,
-            global_config.bluetooth,
-            global_config.white,
-            global_config.showweather,
-            global_config.showfahrenheit,
-            global_config.weatherpoll,
-            global_config.showdate,
-            global_config.showlocation
-        );  
+            APP_LOG (APP_LOG_LEVEL_DEBUG,"Set Old version: %d year - %d, month - %d, - day %d", version,  (int)global_config.year, global_config.month, global_config.day);
+            APP_LOG (APP_LOG_LEVEL_DEBUG, "Seconds %d, format %d, triangle %d, battery %d, bluetooth %d, white %d, weather %d,f %d,p %d, date %d, loc %d",
+                global_config.showseconds,
+                (int)global_config.countformat,
+                global_config.showtriangle,
+                global_config.battery,
+                global_config.bluetooth,
+                global_config.white,
+                global_config.showweather,
+                global_config.showfahrenheit,
+                global_config.weatherpoll,
+                global_config.showdate,
+                global_config.showlocation
+            );  
 #endif
     }
+    
     s_time_to_poll = global_config.weatherpoll;
     
     // Setup conter time from presist
@@ -634,9 +643,11 @@ static void init() {
 
 static void deinit() {
 #ifdef DO_DEBUG_LOGS
+    persist_write_int(STORAGE_VERSION_KEY,STORAGE_VERSION);
     int written = persist_write_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
     APP_LOG (APP_LOG_LEVEL_DEBUG,"Wrote : %d, Size : %d",written,sizeof(global_config));
 #else
+    persist_write_int(STORAGE_VERSION_KEY,STORAGE_VERSION);
     persist_write_data (KEY_STRUCTURE,&global_config,sizeof(global_config));
 #endif
    

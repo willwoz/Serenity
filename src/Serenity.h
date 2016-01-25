@@ -4,6 +4,9 @@
 
 #define DO_DEBUG_LOGS
 
+#define STORAGE_VERSION_KEY    99
+#define STORAGE_VERSION        2
+
 #define NUM_CLOCK_TICKS 13
 #define NUM_CLOCK_TICKS_WHITE 8
 #define NUM_CLOCK_TICKS_RED 13
@@ -34,6 +37,7 @@ static int s_weather_updated = 0;
 #define FMT_BLANK   3
 
 #define KEY_COUNTFROM 0
+
 
 #define KEY_STRUCTURE   0
 
