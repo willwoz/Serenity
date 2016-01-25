@@ -2,12 +2,8 @@
 #include "pebble.h"
 
 static Window *s_window;
-static Layer *s_simple_bg_layer, *s_date_layer, *s_hands_layer, *s_bt_layer, *s_weather_layer;
-static TextLayer *s_date_label, *s_count_label, *s_battery_label, *s_weather_label;
-
-//static BitmapLayer *s_bt_icon_layer;
-//static GBitmap  *s_bt_icon_bitmap;
-
+static Layer *s_simple_bg_layer, *s_date_layer, *s_hands_layer, *s_bt_layer;
+static TextLayer *s_date_label, *s_count_label, *s_battery_label, *s_weather_label, *s_loc_label;
 
 static GPath *s_tick_paths[NUM_CLOCK_TICKS];
 static GPath *s_minute_arrow, *s_hour_arrow;
@@ -15,7 +11,7 @@ static GPath *s_triangle,*s_bt_path;
 
 static GColor s_background_color,s_forground_color;
 
-static char s_num_buffer[4], s_day_buffer[6], s_count_buffer[14], s_date_buffer[10],s_battery_buffer[5], s_weather_buffer[20];
+static char s_num_buffer[4], s_day_buffer[6], s_count_buffer[14], s_date_buffer[10],s_battery_buffer[5], s_weather_buffer[20], s_location_buffer[15];
 
 static struct tm then;
 static int s_current_temp;
@@ -37,6 +33,10 @@ static void update_text_layers() {
     text_layer_set_text_color(s_date_label, s_forground_color);
     layer_set_hidden(text_layer_get_layer(s_date_label),(global_config.showdate == 0));
     
+    text_layer_set_background_color(s_loc_label, s_background_color);
+    text_layer_set_text_color(s_loc_label, s_forground_color);
+    layer_set_hidden(text_layer_get_layer(s_loc_label),(global_config.showlocation == 0));
+
     text_layer_set_background_color(s_count_label, s_background_color);
     text_layer_set_text_color(s_count_label, s_forground_color);
     layer_set_hidden(text_layer_get_layer(s_count_label),(global_config.countformat == FMT_BLANK));
@@ -277,6 +277,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 
     while (t != NULL) {
         switch (t->key) {
+//             Weather Messsage
             case KEY_TEMPERATURE :           
                 s_current_temp = t->value->int8;
                 if (global_config.showfahrenheit == 1)
@@ -293,9 +294,15 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
 #ifdef DO_DEBUG_LOGS
                APP_LOG(APP_LOG_LEVEL_DEBUG,"Condition Message: %d%s, %s",s_current_temp,((global_config.showfahrenheit == 1)?"F":"C"), s_current_conditions);
 #endif
-                update_text_layers();
-                layer_set_hidden(text_layer_get_layer(s_weather_label),(global_config.showweather == 0));
                 break;
+            case KEY_LOCATION :
+                snprintf (s_location_buffer,sizeof(s_location_buffer),"%s", t->value->cstring);
+#ifdef DO_DEBUG_LOGS
+               APP_LOG(APP_LOG_LEVEL_DEBUG,"Location: %s", s_location_buffer);
+#endif
+                break;
+                
+//           Configeration Message
             case KEY_YEAR :
                 global_config.year = t->value->int32;
                 break;
@@ -432,6 +439,15 @@ static void window_load(Window *window) {
     text_layer_set_font(s_date_label, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
     layer_add_child(s_date_layer, text_layer_get_layer(s_date_label));
     layer_set_hidden(text_layer_get_layer(s_date_label),(global_config.showdate == 0));
+
+    s_loc_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 5 )/18)-4, 101, 21));
+    text_layer_set_text_alignment(s_loc_label,GTextAlignmentCenter);
+    text_layer_set_text(s_loc_label, s_location_buffer);
+    text_layer_set_background_color(s_loc_label, s_background_color);
+    text_layer_set_text_color(s_loc_label, s_forground_color);
+    text_layer_set_font(s_loc_label, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    layer_add_child(s_date_layer, text_layer_get_layer(s_loc_label));
+    layer_set_hidden(text_layer_get_layer(s_loc_label),(global_config.showlocation == 0));
 
     s_count_label = text_layer_create(GRect(centre.x-50, ((bounds.size.h * 11 )/ 18)-1, 101, 21));
     text_layer_set_text_alignment(s_count_label,GTextAlignmentCenter);

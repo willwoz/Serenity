@@ -26,11 +26,16 @@ function locationSuccess(pos) {
             // Conditions
             var conditions = json.weather[0].main;      
             console.log('Conditions are ' + conditions);
+            
+            var curr_location = json.name;
+            console.log('Location is are ' + curr_location);
 
           // Send tp Pebble
             Pebble.sendAppMessage({
-              temperature: temperature,
-              conditions: conditions },
+                temperature: temperature,
+                conditions: conditions,
+                currlocation: curr_location
+            },
               function(e) {
                 console.log('Send successful!');
               }, function(e) {

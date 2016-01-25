@@ -15,7 +15,8 @@
         "showfahrenheit": 10,
         "weatherpoll": 11,
         "showdate": 12,
-        "showlocation": 13
+        "showlocation": 13,
+        "currlocation": 22
     },
     "capabilities": [
         "location",

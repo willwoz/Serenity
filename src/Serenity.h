@@ -2,7 +2,7 @@
 
 #include "pebble.h"
 
-//#define DO_DEBUG_LOGS
+#define DO_DEBUG_LOGS
 
 #define NUM_CLOCK_TICKS 13
 #define NUM_CLOCK_TICKS_WHITE 8
@@ -53,6 +53,7 @@ static int s_weather_updated = 0;
 #define KEY_SHOWLOCATION    13
 #define KEY_TEMPERATURE     20
 #define KEY_CONDITIONS      21
+#define KEY_LOCATION        22
 
 #define KEY_TOTAL_KEYS      21
 
