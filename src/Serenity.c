@@ -517,7 +517,7 @@ static void init_config() {
         global_config.showseconds = 1;
         global_config.countformat = FMT_DAYS;
         global_config.showtriangle = 1;
-        global_config.battery = 1;
+        global_config.battery = 0;
         global_config.bluetooth = 1;
         global_config.white = 0;
         global_config.showweather = 1;
